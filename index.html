@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise AI Masterclass: Agentforce & Copilot Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&family=Salesforce+Sans:wght@300;400;700&display=swap');
+        
+        :root {
+            --sf-blue: #0176D3;
+            --sf-dark-blue: #032D60;
+            --agent-purple: #742796;
+            --agent-gradient: linear-gradient(135deg, #742796 0%, #0176D3 100%);
+            --ms-blue: #0078D4;
+            --ms-dark-blue: #106EBE;
+            --copilot-gradient: linear-gradient(135deg, #28E4FF 0%, #0078D4 50%, #5C2D91 100%);
+            --bg-light: #F3F3F9;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Salesforce Sans', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-light);
+            transition: background-color 0.3s ease;
+        }
+
+        /* Platform Theming */
+        body.theme-sf { --active-color: var(--agent-purple); --active-gradient: var(--agent-gradient); }
+        body.theme-ms { --active-color: var(--ms-blue); --active-gradient: var(--copilot-gradient); }
+
+        .dynamic-header {
+            background: var(--active-gradient);
+            transition: all 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timeline-card {
+            border-left: 4px solid var(--active-color);
+            transition: transform 0.2s;
+        }
+
+        .project-card {
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid #E5E5E5;
+        }
+
+        .project-card:hover {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-color: var(--active-color);
+            transform: translateY(-2px);
+        }
+
+        .badge-tech {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .theme-sf .badge-tech { background-color: #F0E6F6; color: var(--agent-purple); }
+        .theme-ms .badge-tech { background-color: #E6F2FB; color: var(--ms-blue); }
+
+        .tab-btn {
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            opacity: 0.6;
+        }
+        .tab-btn.active {
+            opacity: 1;
+            border-bottom-color: white;
+        }
+
+        /* Modal Styling */
+        #detail-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 16px;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #999;
+            z-index: 10;
+        }
+
+        .workshop-link {
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .workshop-link:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body class="theme-sf antialiased">
+
+    <!-- Global Header with Tabs -->
+    <header class="dynamic-header text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+                <div class="flex items-center gap-4">
+                    <div id="platform-logo-container" class="bg-white p-2 rounded shadow-sm">
+                        <img id="platform-logo" src="https://upload.wikimedia.org/wikipedia/commons/f/f9/Salesforce.com_logo.svg" alt="Logo" class="h-8">
+                    </div>
+                    <span class="text-2xl font-light opacity-50">|</span>
+                    <h1 id="main-title" class="text-2xl md:text-3xl font-bold tracking-tight">Agentforce Masterclass</h1>
+                </div>
+                
+                <div class="flex bg-black/20 rounded-lg p-1 mt-4 md:mt-0">
+                    <button onclick="setTab('sf')" id="tab-sf" class="tab-btn active">
+                        <i class="fa-solid fa-bolt mr-2"></i> Agentforce
+                    </button>
+                    <button onclick="setTab('ms')" id="tab-ms" class="tab-btn">
+                        <i class="fa-brands fa-microsoft mr-2"></i> Copilot Studio
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
+                <div class="flex-1">
+                    <p id="main-subtitle" class="text-lg opacity-90 max-w-2xl mb-4">3-Week Deep-Dive: Mastering Atlas Reasoning, Agentic Flows, and the Einstein Trust Layer.</p>
+                    
+                    <!-- Workshop Quick Links -->
+                    <div class="flex flex-wrap gap-3">
+                        <a href="https://xoriant-my.sharepoint.com/:b:/g/personal/vipin_shekhawat_fexle_com/IQCQUJr_na7xQo2Zhq0-3GvXATFm5ZrvBzT-e1777WtmWAg?e=XHA0Qi" target="_blank" class="workshop-link flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold">
+                            <i class="fa-solid fa-video"></i> Workshop Video
+                        </a>
+                        <a href="https://xoriant-my.sharepoint.com/personal/vipin_shekhawat_fexle_com/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fvipin%5Fshekhawat%5Ffexle%5Fcom%2FDocuments%2FAgentforce%2FGetting%20started%20with%20Agentforce%20%2D%20Fexle%20Workshop%2Epdf&parent=%2Fpersonal%2Fvipin%5Fshekhawat%5Ffexle%5Fcom%2FDocuments%2FAgentforce&ga=1" target="_blank" class="workshop-link flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold">
+                            <i class="fa-solid fa-file-pdf"></i> Workshop Document
+                        </a>
+                        <a href="https://xoriant-my.sharepoint.com/:x:/g/personal/rajeev_jain_fexle_com/IQDoSyCENCG6SZ8nGkewh2WFARjD6UYEfNgwEbyWIQavzgc?e=YIKo8M" target="_blank" class="workshop-link flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold">
+                            <i class="fa-solid fa-calendar-days"></i> Training Planning Sheet
+                        </a>
+                        <a href="https://xoriant-my.sharepoint.com/:f:/g/personal/rohit_sharma_fexle_com/IgBqQK9Lm4yVQ65lCuNDPfHnAaEMpdaAmTql40wbzjr8kPk" target="_blank" class="workshop-link flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold">
+                            <i class="fa-solid fa-trophy"></i> Hackathon Sample Project
+                        </a>
+                    </div>
+                </div>
+                <div class="hidden sm:flex gap-4">
+                    <div class="text-center bg-white/10 p-3 rounded-lg backdrop-blur-sm border border-white/20">
+                        <div id="stat-count" class="text-xl font-bold">14</div>
+                        <div class="text-[10px] uppercase">Blueprints</div>
+                    </div>
+                    <div class="text-center bg-white/10 p-3 rounded-lg backdrop-blur-sm border border-white/20">
+                        <div id="stat-label" class="text-xl font-bold">3 Weeks</div>
+                        <div class="text-[10px] uppercase">Duration</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-4 gap-10">
+        
+        <!-- Sidebar -->
+        <aside class="lg:col-span-1">
+            <div id="sidebar-content" class="sticky top-8 space-y-6">
+                <!-- Sidebar content injected here based on tab -->
+            </div>
+        </aside>
+
+        <!-- Main Content (Projects Grid) -->
+        <div class="lg:col-span-3">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Technical Blueprints</h2>
+                    <p class="text-gray-500" id="grid-subtitle">Explore advanced implementations and reasoning logic.</p>
+                </div>
+                <div class="w-full md:w-auto">
+                    <input type="text" id="project-filter" onkeyup="filterProjects()" placeholder="Search projects or team..." class="w-full px-4 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="projects-container">
+                <!-- Projects injected here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Detail Overlay -->
+    <div id="detail-overlay" onclick="closeModal(event)">
+        <div class="modal-content shadow-2xl" onclick="event.stopPropagation()">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <footer class="bg-white border-t mt-20 py-10 px-6 text-center text-gray-400 text-xs">
+        <p>&copy; 2024 Unified AI Training Hub | Salesforce Agentforce & Microsoft Copilot Masterclasses</p>
+        <p class="mt-1">Internal Implementation Documentation | All Technical Data Preserved</p>
+    </footer>
+
+    <script>
+        const teamMappings = {
+            'Team A': ['Sandeep Jain', 'Ayush Pandey'],
+            'Team B': ['Puneet Rawat', 'Sajal Mittal'],
+            'Team C': ['Vardhman Jain', 'Shivam Diwan'],
+            'Team D': ['Abhishek Jain', 'Devansh Khandelwal'],
+            'Team E': ['Yatika Dewaskar', 'Leena Ahuja'],
+            'Team F': ['Deepesh Bairathi', 'Dhruvraj Singh Chouhan'],
+            'Team G': ['Akansha Gupta', 'Chirag Soni'],
+            'Team H': ['Mohit Keshwani', 'Divyesh Trivedi'],
+            'Team I': ['Sourabh Soni', 'Pranay Maheshwari']
+        };
+
+        const sfData = {
+            title: "Agentforce Masterclass",
+            subtitle: "3-Week Deep-Dive: Mastering Atlas Reasoning, Agentic Flows, and the Einstein Trust Layer.",
+            logo: "https://upload.wikimedia.org/wikipedia/commons/f/f9/Salesforce.com_logo.svg",
+            stats: ["14", "3 Weeks"],
+            projects: [
+                { id: 1, title: "Autonomous WISMO & Logistics", category: "Service & Logistics", businessCase: "Managing the post-purchase experience by resolving shipping delays and automating refund logic through reasoning.", topics: ["Order Tracking & Logistics: Real-time status and carrier comms.", "Financial Disputes: Managing late arrival compensation."], actions: ["Identify Order Record (Predefined)", "Get_Shipping_Status (Custom Apex)", "Calculate_Delay_Penalty (Prompt)", "Launch_Refund_Screen_Flow (Screen Flow)", "Notify_Customer_Slack (Custom Flow)"], feature: "Reasoning to decide if a $15 credit or full refund is appropriate based on policy.", team: 'Team E' },
+                { id: 2, title: "Omni-Channel Case Intelligence", category: "Customer Support", businessCase: "Reducing 'Time to Resolve' by providing agents with instant context across channels.", topics: ["Interaction Summarization: Synthesizing emails/chats.", "Knowledge Strategy: Surfacing articles and next best actions."], actions: ["Generate_Case_Summary (Prompt Template)", "Search_Knowledge (RAG-based)", "Suggest_Resolution_Steps (Prompt)", "Einstein Summary Component UI"], team: 'Team H' },
+                { id: 3, title: "Field Service Smart Dispatcher", category: "Field Service", businessCase: "Managing mobile workforce scheduling with skill matching and location logic.", topics: ["Booking & Rescheduling", "Technical Scoping"], actions: ["Book_Appointment (Salesforce Scheduler)", "Check_Technician_Skills (Custom Flow)", "Get_Traffic_Proximity (Custom Apex)", "Generate_Service_Estimate (Prompt)"], team: 'Team C' },
+                { id: 4, title: "Trust, Safety & Ethics Guardrail", category: "Governance & Security", businessCase: "Governance-first agent handling PII and escalation based on emotional intensity.", topics: ["Data Privacy & Masking", "Conflict De-escalation"], actions: ["Mask_PII_Data (System Action)", "Analyze_Sentiment_Score (Prompt)", "Log_Security_Audit (Flow)", "Trigger_Manager_Escalation (Slack)"] },
+                { id: 5, title: "SDR Personalized Outreach", category: "Sales", businessCase: "Generating hyper-personalized sales collateral and outreach at scale.", topics: ["Prospect Research", "Collateral Generation"], actions: ["Get_Company_News (Custom Apex)", "Draft_Outreach_Email (Prompt)", "Generate_Dynamic_Proposal (Prompt + Flow)", "Calculate_Deal_Probability (Prompt)"], team: 'Team F' },
+                { id: 6, title: "Deal Health & Risk Side-Panel", category: "Sales Intelligence", businessCase: "An 'AI Analyst' side panel for sales reps tracking velocity and risks.", topics: ["Velocity Tracking", "Risk Mitigation"], actions: ["Get_Stage_History (Flow)", "Compare_Velocity (Benchmark Apex)", "Summarize_Deal_Risks (Prompt)", "Risk_Mitigation_Screen_Flow (UI)"] },
+                { id: 7, title: "Account Relationship Narrative", category: "Account Management", businessCase: "Synthesizing massive Account hierarchies into a readable strategic narrative.", topics: ["Relationship Mapping", "Strategic History"], actions: ["Get_Account_Hierarchy (Flow)", "Rollup_Total_ARR (Custom Apex)", "Draft_Relationship_Bio (Prompt)", "Highlight_Whitespace (Prompt)"], team: 'Team I' },
+                { id: 8, title: "HR Internal Benefits Concierge", category: "Internal Operations", businessCase: "Deflecting internal HR tickets by providing self-service benefits via Slack.", topics: ["Policy Guidance", "Life Events & PTO"], actions: ["Search_HR_Knowledge (RAG Search)", "Get_PTO_Balance (External API Flow)", "Submit_Life_Event_Flow (Screen Flow)", "Update_Employee_Record (Predefined)"] },
+                { id: 9, title: "IT Service Desk & Provisioning", category: "Internal Operations", businessCase: "Automating internal IT requests and basic troubleshooting via chat.", topics: ["Equipment Provisioning", "Technical Troubleshooting"], actions: ["Check_Asset_Stock (ERP Apex)", "Identify_User_Tier (System Action)", "Provisioning_Screen_Flow (AI Recs)", "Reset_Password_Action (Custom Apex)"], team: 'Team A' },
+                { id: 10, title: "Expense Policy Auditor", category: "Finance & Reasoning", businessCase: "Automating travel expense audits against policy using OCR and reasoning.", topics: ["Receipt Data Extraction", "Compliance Logic"], actions: ["Extract_Receipt_Data (OCR Flow)", "Verify_Match (Prompt)", "Search_Expense_Policy (RAG)", "Audit_Summary_Tab (Einstein UI)"], team: 'Team G' },
+                { id: 11, title: "Dynamic Invoice Mapper", category: "Finance & OCR", businessCase: "Mapping unstructured invoices directly to records without pre-indexed knowledge.", topics: ["Runtime Document Analysis", "Record Mapping"], actions: ["Run_Einstein_OCR (Agentic Flow)", "Map_Text_to_JSON (Prompt)", "Validate_Vendor_Database (Flow)", "Invoice_Validation_Screen_Flow (Side-by-side UI)"] },
+                { id: 12, title: "Spec-Sheet Search Indexer", category: "Sales Engineering", businessCase: "Enabling search within customer technical manuals during live sessions.", topics: ["Dynamic Indexing", "Technical Comparison"], actions: ["Chunk_Document_Content (Custom Apex)", "Create_Temporary_Index (Flow)", "Query_Manual_Context (Prompt)", "Generate_Comparison_Proposal (Prompt + Flow)"], team: 'Team B' },
+                { id: 13, title: "Asset Warranty Validator", category: "Manufacturing & Service", businessCase: "Validating industrial machinery warranties by reasoning across records and PDFs.", topics: ["Entitlement Verification", "Renewal Strategy"], actions: ["Check_Warranty_PDF (Prompt)", "Calculate_Out_of_Pocket_Cost (Prompt)", "Warranty_Extension_Proposal (Flow)", "Warranty_Insight_Tab (Einstein UI)"], team: 'Team D' },
+                { id: 14, title: "Multi-Agent Master Orchestrator", category: "Advanced Architecture", businessCase: "A 'Lead Agent' that triages complex requests and delegates to sub-agents.", topics: ["Intent Triage", "Cross-Functional Handoff"], actions: ["Identify_Domain_Intent (Prompt)", "Delegate_to_SubAgent (Custom Action)", "Summarize_Cross_Agent_Interaction (Prompt)", "Synthesize_Unified_Response (Prompt)"] }
+            ]
+        };
+
+        const msData = {
+            title: "Copilot Studio Masterclass",
+            subtitle: '2-Week Rapid Build: 8 Next-Gen Agents built exclusively with Standard M365 Tools (Excel, Planner, SharePoint, Outlook).',
+            logo: "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg",
+            stats: ["8", "2 Weeks"],
+            projects: [
+                { id: 1, title: "The 'Standup Scribe' (Agile Bot)", category: "Project Management", businessCase: "Simulating a Jira/DevOps workflow. The agent listens to task updates and moves cards on a Kanban board.", stack: "Microsoft Planner + Teams", description: "Instead of paying for Jira, we create a 'Project Board' in Microsoft Planner. The Agent acts as a Scrum Master.", actions: ["List_My_Tasks (Planner Connector)", "Update_Task_Status (Planner Connector)", "Create_Blocker_Task (Planner Connector)", "Post_Standup_Summary (Teams Connector)"], flow: "User says 'I finished the login page' -> Agent finds the Planner Task -> Moves bucket from 'In Progress' to 'QA'.", team: 'Team B' },
+                { id: 2, title: "The 'Visual Asset Tracker'", category: "Vision & Inventory", businessCase: "Simulating an inventory scanner. User uploads a photo of an item, and the agent updates the stock count.", stack: "SharePoint Lists + AI Builder (Trial)", description: "We use a SharePoint List named 'Inventory' as our database. We use GPT-4o (Vision) to identify the object in the photo.", actions: ["Analyze_Image_Content (Azure OpenAI/AI Builder)", "Get_Item_By_Name (SharePoint - Get Items)", "Update_Stock_Count (SharePoint - Update Item)", "Send_Low_Stock_Alert (Outlook Connector)"], flow: "User uploads photo of a laptop -> Agent sees 'Laptop' -> Queries SharePoint -> Subtracts 1 from 'Quantity'.", team: 'Team E' },
+                { id: 3, title: "The 'Proposal Architect' (RAG)", category: "Sales Enablement", businessCase: "Simulating a sophisticated RFP tool. The agent reads old PDF proposals to write new ones.", stack: "SharePoint Document Library + Word", description: "Create a SharePoint Folder called 'Past Proposals'. Upload 3-4 PDFs. The Agent uses Generative Answers to draft new content.", actions: ["Search_Past_Docs (Generative Answers / RAG)", "Draft_Scope_Section (Prompt Node)", "Create_Word_Doc (Word Online Connector)", "Email_Draft_To_User (Outlook Connector)"], flow: "User: 'Write a proposal for Contoso based on our security standards' -> Agent reads PDFs -> Generates Word Doc.", team: 'Team I' },
+                { id: 4, title: "The 'Invoice Scraper'", category: "Finance Automation", businessCase: "Simulating an Accounts Payable bot. Extracts data from PDF invoices and logs them into a ledger.", stack: "Excel Online + AI Builder", description: "We use an Excel file in OneDrive as our 'Finance Ledger'. The agent reads incoming PDF invoices.", actions: ["Extract_Invoice_Data (AI Builder Pre-built Model)", "Add_Row_To_Table (Excel Online Business)", "Calculate_Total_Spend (Power Automate Expression)", "Approval_Request (Teams Approvals)"], flow: "User uploads invoice.pdf -> Agent extracts 'Vendor' & 'Amount' -> Adds row to Excel -> Asks Manager for approval in Teams.", team: 'Team H' },
+                { id: 5, title: "The 'Onboarding Orchestrator'", category: "HR Operations", businessCase: "Simulating an HRIS system like Workday. Automates the 'New Hire' checklist.", stack: "Microsoft Lists + Entra ID (Azure AD)", description: "We use a Microsoft List as the 'Employee Database'. The agent provisions basic access and sends welcome emails.", actions: ["Create_Employee_Record (SharePoint Lists)", "Get_Manager_Details (Office 365 Users)", "Send_Welcome_Packet (Outlook with Attachments)", "Schedule_Orientation (Outlook Calendar)"], flow: "User: 'Onboard John Doe' -> Agent creates List Item -> Finds Manager -> Sends Invite -> Emails John the handbook.", team: 'Team G' },
+                { id: 6, title: "The 'Meeting Prep' Agent", category: "Personal Productivity", businessCase: "A deep-dive into the Microsoft Graph. Prepares you for meetings by scanning your own data.", stack: "Office 365 (Email/Calendar/OneDrive)", description: "No external data needed. The agent looks at your actual calendar and emails to summarize context.", actions: ["Get_Upcoming_Meetings (Outlook)", "Get_Emails_From_Attendees (Outlook)", "Summarize_Context (Generative Prompt)", "Create_OneNote_Page (OneNote Connector)"], flow: "User: 'Prep me for my 2pm' -> Agent finds the 2pm meeting -> Reads last 5 emails from attendees -> Creates OneNote summary.", team: 'Team C' },
+                { id: 7, title: "The 'Mock CRM' Update", category: "Sales (Dataverse)", businessCase: "Simulating Salesforce updates using the standard Dataverse tables included in M365.", stack: "Dataverse (Standard Tables)", description: "Every environment has a 'Contacts' and 'Accounts' table. We use this to teach CRM CRUD operations.", actions: ["Search_Rows (Dataverse - Contacts)", "Update_Phone_Number (Dataverse)", "Add_Note_To_Timeline (Dataverse)", "Qualify_Lead_Logic (Power Fx)"], flow: "User: 'Update Alice's phone number to 555-0199' -> Agent searches 'Alice' in Dataverse -> Updates the row.", team: 'Team A & F' },
+                { id: 8, title: "The 'Travel & Weather' Planner", category: "External Public Data", businessCase: "Demonstrating how to fetch live public data without API keys using MSN Weather.", stack: "MSN Weather + Bing Search", description: "Uses pre-built connectors that don't require credentials. Good for teaching API handling.", actions: ["Get_Forecast (MSN Weather Connector)", "Search_Points_of_Interest (Bing Search)", "Suggest_Itinerary (Generative Prompt)", "Email_Itinerary (Outlook)"], flow: "User: 'Plan a 3-day trip to Seattle' -> Agent checks rain -> Finds museums via Bing -> Emails a schedule.", team: 'Team D' }
+            ]
+        };
+
+        let currentTab = 'sf';
+
+        function setTab(tab) {
+            currentTab = tab;
+            const data = tab === 'sf' ? sfData : msData;
+            document.body.className = `theme-${tab} antialiased`;
+            
+            // Header Update
+            document.getElementById('main-title').innerText = data.title;
+            document.getElementById('main-subtitle').innerText = data.subtitle;
+            document.getElementById('platform-logo').src = data.logo;
+            document.getElementById('stat-count').innerText = data.stats[0];
+            document.getElementById('stat-label').innerText = data.stats[1];
+
+            // Tab Buttons
+            document.getElementById('tab-sf').classList.toggle('active', tab === 'sf');
+            document.getElementById('tab-ms').classList.toggle('active', tab === 'ms');
+
+            renderSidebar(tab);
+            renderProjects();
+        }
+
+        function renderSidebar(tab) {
+            const sidebar = document.getElementById('sidebar-content');
+            if (tab === 'sf') {
+                sidebar.innerHTML = `
+                    <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-calendar-check text-purple-600"></i> Curriculum (3 Weeks)</h3>
+                        <div class="space-y-4">
+                            <div class="timeline-card p-3 bg-purple-50 rounded"><div class="text-[10px] font-bold text-purple-600 uppercase">Week 1</div><div class="font-bold text-sm">Exploration & Design</div></div>
+                            <div class="timeline-card p-3 bg-purple-50 rounded"><div class="text-[10px] font-bold text-purple-600 uppercase">Week 2</div><div class="font-bold text-sm">The Build (1.5 Weeks)</div></div>
+                            <div class="timeline-card p-3 bg-purple-50 rounded"><div class="text-[10px] font-bold text-purple-600 uppercase">Week 3</div><div class="font-bold text-sm">Testing & Demo</div></div>
+                        </div>
+                    </section>
+                    <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-microchip text-purple-600"></i> Core Principles</h3>
+                        <ul class="text-sm space-y-3 text-gray-600">
+                            <li class="flex gap-2"><i class="fa-solid fa-check text-green-500 mt-1"></i> Atlas Reasoning Instructions</li>
+                            <li class="flex gap-2"><i class="fa-solid fa-check text-green-500 mt-1"></i> Agentic Flows Context</li>
+                            <li class="flex gap-2"><i class="fa-solid fa-check text-green-500 mt-1"></i> Prompt-Led UI</li>
+                            <li class="flex gap-2"><i class="fa-solid fa-check text-green-500 mt-1"></i> Error Handling</li>
+                        </ul>
+                    </section>
+                `;
+            } else {
+                sidebar.innerHTML = `
+                    <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-calendar-check text-blue-600"></i> Curriculum (2 Weeks)</h3>
+                        <div class="space-y-4">
+                            <div class="timeline-card p-3 bg-blue-50 rounded"><div class="text-[10px] font-bold text-blue-600 uppercase">Week 1</div><div class="font-bold text-sm">Setup & Topic Design</div></div>
+                            <div class="timeline-card p-3 bg-blue-50 rounded"><div class="text-[10px] font-bold text-blue-600 uppercase">Week 2</div><div class="font-bold text-sm">Build, Test & Launch</div></div>
+                        </div>
+                    </section>
+                    <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-tools text-blue-600"></i> The "Mock" Stack</h3>
+                        <p class="text-[10px] text-gray-400 mb-4 uppercase font-bold">Simulating Systems with M365</p>
+                        <div class="space-y-3">
+                            <div class="p-2 bg-gray-50 rounded text-xs flex justify-between items-center"><span class="font-bold text-gray-600">ERP / SQL</span> <i class="fa-solid fa-arrow-right text-gray-300"></i> <span class="text-green-600 font-bold">Excel Online</span></div>
+                            <div class="p-2 bg-gray-50 rounded text-xs flex justify-between items-center"><span class="font-bold text-gray-600">Jira / ServiceNow</span> <i class="fa-solid fa-arrow-right text-gray-300"></i> <span class="text-blue-600 font-bold">MS Planner</span></div>
+                            <div class="p-2 bg-gray-50 rounded text-xs flex justify-between items-center"><span class="font-bold text-gray-600">Salesforce</span> <i class="fa-solid fa-arrow-right text-gray-300"></i> <span class="text-purple-600 font-bold">Dataverse</span></div>
+                            <div class="p-2 bg-gray-50 rounded text-xs flex justify-between items-center"><span class="font-bold text-gray-600">Docs</span> <i class="fa-solid fa-arrow-right text-gray-300"></i> <span class="text-orange-600 font-bold">SharePoint</span></div>
+                        </div>
+                    </section>
+                `;
+            }
+        }
+
+        function renderProjects() {
+            const container = document.getElementById('projects-container');
+            const projects = currentTab === 'sf' ? sfData.projects : msData.projects;
+            
+            container.innerHTML = projects.map(p => `
+                <div class="project-card p-6" onclick="openModal(${p.id})">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400 block">${p.category}</span>
+                        ${p.team ? `<span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">${p.team}</span>` : ''}
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-800">${p.title}</h3>
+                    <p class="text-sm text-gray-600 line-clamp-2 mb-4">${p.businessCase}</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${p.actions.slice(0, 3).map(a => `<span class="badge-tech">${a.split('(')[0].trim()}</span>`).join('')}
+                        ${p.actions.length > 3 ? `<span class="text-[10px] text-gray-400 mt-1 self-center">+${p.actions.length - 3} more</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterProjects() {
+            const query = document.getElementById('project-filter').value.toLowerCase();
+            const cards = document.querySelectorAll('.project-card');
+            cards.forEach(card => {
+                const text = card.innerText.toLowerCase();
+                card.style.display = text.includes(query) ? 'block' : 'none';
+            });
+        }
+
+        function openModal(id) {
+            const p = (currentTab === 'sf' ? sfData.projects : msData.projects).find(x => x.id === id);
+            const isSF = currentTab === 'sf';
+            const body = document.getElementById('modal-body');
+            
+            // Generate resource list for the team
+            let resourcesHtml = '';
+            if (p.team) {
+                const teams = p.team.split('&').map(t => t.trim());
+                resourcesHtml = teams.map(teamName => {
+                    const members = teamMappings[teamName] || [];
+                    return `
+                        <div class="mt-2">
+                            <span class="font-bold text-gray-800">${teamName}:</span>
+                            <span class="text-gray-600">${members.length > 0 ? members.join(', ') : 'TBD'}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            body.innerHTML = `
+                <div class="p-8">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="h-14 w-14 rounded-xl flex items-center justify-center text-white text-2xl font-bold shadow-lg" style="background:${isSF ? 'var(--agent-purple)' : 'var(--ms-blue)'}">
+                            ${p.id}
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-widest ${isSF ? 'text-purple-600' : 'text-blue-600'}">${p.category}</span>
+                            <h2 class="text-3xl font-bold text-gray-800">${p.title}</h2>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="md:col-span-2 space-y-6">
+                            <section>
+                                <h4 class="text-xs uppercase font-bold text-gray-400 tracking-widest mb-2">Business Case</h4>
+                                <p class="text-gray-700 leading-relaxed">${p.businessCase}</p>
+                            </section>
+
+                            ${p.team ? `
+                                <section class="bg-slate-50 p-4 rounded-lg border border-slate-200 shadow-inner">
+                                    <h4 class="text-xs uppercase font-bold text-slate-500 tracking-widest mb-1"><i class="fa-solid fa-users mr-1"></i> Assigned Resources</h4>
+                                    <div class="text-sm">
+                                        ${resourcesHtml}
+                                    </div>
+                                </section>
+                            ` : ''}
+
+                            ${p.topics ? `
+                                <section>
+                                    <h4 class="text-xs uppercase font-bold text-gray-400 tracking-widest mb-3">Core Topics</h4>
+                                    <ul class="space-y-2">
+                                        ${p.topics.map(t => `<li class="flex gap-2 text-sm text-gray-600"><i class="fa-solid fa-circle-info text-blue-400 mt-1"></i> ${t}</li>`).join('')}
+                                    </ul>
+                                </section>
+                            ` : ''}
+
+                            ${p.description ? `
+                                <section class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                    <h4 class="text-xs font-bold text-blue-600 uppercase mb-1">Architecture Note</h4>
+                                    <p class="text-sm text-blue-800">${p.description}</p>
+                                </section>
+                            ` : ''}
+
+                            ${p.flow ? `
+                                <section>
+                                    <h4 class="text-xs uppercase font-bold text-gray-400 tracking-widest mb-2">User Interaction Flow</h4>
+                                    <div class="p-4 bg-gray-50 rounded border border-gray-100 text-sm text-gray-700 italic">
+                                        "${p.flow}"
+                                    </div>
+                                </section>
+                            ` : ''}
+
+                            ${p.feature ? `
+                                <section class="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                                    <h4 class="text-xs uppercase font-bold text-purple-500 mb-1">Agentic Intelligence Highlight</h4>
+                                    <p class="text-sm text-purple-900 font-medium">${p.feature}</p>
+                                </section>
+                            ` : ''}
+                        </div>
+
+                        <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                            <h4 class="text-xs uppercase font-bold text-gray-400 tracking-widest mb-4">Technical Actions</h4>
+                            <div class="space-y-3">
+                                ${p.actions.map(a => `
+                                    <div class="p-3 bg-white border border-gray-100 rounded shadow-sm">
+                                        <div class="text-xs font-bold text-gray-800">${a.split('(')[0]}</div>
+                                        <div class="text-[10px] text-gray-400 italic mt-1">${a.includes('(') ? '(' + a.split('(')[1] : ''}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ${p.stack ? `
+                                <div class="mt-6 pt-6 border-t border-gray-200">
+                                    <h4 class="text-[10px] uppercase font-bold text-gray-400 mb-2">Mock Stack Components</h4>
+                                    <div class="text-xs font-bold text-blue-600">${p.stack}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detail-overlay').style.display = 'flex';
+        }
+
+        function closeModal(e) {
+            if (!e || e.target === document.getElementById('detail-overlay')) {
+                document.getElementById('detail-overlay').style.display = 'none';
+            }
+        }
+
+        // Initialize
+        setTab('sf');
+    </script>
+</body>
+</html>
